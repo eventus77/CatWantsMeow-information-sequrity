@@ -3,12 +3,16 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "tea.h"
+#include "tea/tea.h"
+#include "maa/maa.h"
 
 
 #define GENERETE_KEY_ARGUMENT "generate_key"
 #define ENCRYPT_FILE_ARGUMENT "encrypt"
 #define DECRYPT_FILE_ARGUMENT "decrypt"
+
+#define FILE_OPEN_ERROR 1
+#define AUTHENTICATION_ERROR 2
 
 
 FILE* open_file(int argn, int argc, const char *argv[], const char* mode) {
@@ -44,13 +48,23 @@ int main(int argc, const char *argv[]) {
         FILE *input = open_file(3, argc, argv, "rb");
         FILE *output = open_file(4, argc, argv, "wb+");
         if (!input || !output)
-            return 0;
+            return  FILE_OPEN_ERROR;
 
         if (!strcmp(argv[1], ENCRYPT_FILE_ARGUMENT)) {
             encrypt((int*)key, input, output);
+            int auth_code = get_authentication_code(input, (int*)key);
+            fwrite(&auth_code, sizeof(int), 1, output);
         }
         else if (!strcmp(argv[1], DECRYPT_FILE_ARGUMENT)) {
+            int auth_code;
+            fseek(input, 0 - sizeof(int), SEEK_END);
+            fread(&auth_code, sizeof(int), 1, input);
+            rewind(input);
+
             decrypt((int*)key, input, output);
+            if (auth_code != get_authentication_code(output, (int*)key)) {
+                return AUTHENTICATION_ERROR;
+            }
         }
         else {
             printf("Unknown argument \"%s\"\n", argv[1]);

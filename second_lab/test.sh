@@ -15,11 +15,18 @@ do
     key=$(./tea generate_key)
     ./tea encrypt $key $file ~encrypted
     ./tea decrypt $key ~encrypted ~decrypted
+    result=$?
 
     if cmp -s ~decrypted $file;
     then
-        printf "\tTesting %s: ${GREEN}ok${NC}\n" $file
-        let 'successed += 1'
+        if [[ $result == 2 ]];
+        then
+            printf "\tTesting %s: ${RED}authentication failed${NC}\n" $file
+            let 'failed += 1'
+        else
+            printf "\tTesting %s: ${GREEN}ok${NC}\n" $file
+            let 'successed += 1'
+        fi
     else
         printf "\tTesting %s: ${RED}fail${NC}\n" $file
         let 'failed += 1'

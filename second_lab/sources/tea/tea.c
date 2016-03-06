@@ -26,21 +26,24 @@ void decrypt_block(int block[2], const int key[4]) {
 void encrypt(const int key[4], FILE* input, FILE* output) {
     char block[BLOCK_LENGTH];
     int readed_length, total_length = 0;
+    fwrite(&total_length, sizeof(int), 1, output);
+    rewind(input);
     while (readed_length = fread(block, sizeof(char), BLOCK_LENGTH, input)) {
         encrypt_block((int*)block, key);
         fwrite(block, sizeof(char), BLOCK_LENGTH, output);
         memset(block, 0, BLOCK_LENGTH);
         total_length += readed_length;
     }
+    rewind(output);
     fwrite(&total_length, sizeof(int), 1, output);
+    fseek(output, 0, SEEK_END);
 }
 
 
 void decrypt(const int key[4], FILE* input, FILE* output) {
     int total_length = 0;
-    fseek(input, 0 - sizeof(int), SEEK_END);
-    fread(&total_length, sizeof(int), 1, input);
     rewind(input);
+    fread(&total_length, sizeof(int), 1, input);
 
     char block[BLOCK_LENGTH];
     for (total_length; total_length > 0; total_length -= BLOCK_LENGTH) {
