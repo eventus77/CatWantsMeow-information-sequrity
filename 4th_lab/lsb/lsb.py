@@ -18,39 +18,39 @@ def extract_mask(value, mask_len):
 def hide(data, hided=2):
     data = bytearray(data)
     bits = "".join("{:0>8}".format(bin(byte)[2:]) for byte in data) + "0" * 8
-    with Image.open(source_image_filename) as image:
-        pixels = image.load()
-        bit_no = 0
-        try:
-            for i in xrange(image.size[0]):
-                for j in xrange(image.size[1]):
-                    pixel = list(pixels[i, j])
-                    for index, color in enumerate(pixel):
-                        pixel[index] = apply_mask(color, bits[bit_no: bit_no + hided])
-                        bit_no += hided
-                        if bit_no >= len(bits):
-                            break
-                    pixels[i, j] = tuple(pixel)
+    image = Image.open(source_image_filename)
+    pixels = image.load()
+    bit_no = 0
+    try:
+        for i in xrange(image.size[0]):
+            for j in xrange(image.size[1]):
+                pixel = list(pixels[i, j])
+                for index, color in enumerate(pixel):
+                    pixel[index] = apply_mask(color, bits[bit_no: bit_no + hided])
+                    bit_no += hided
                     if bit_no >= len(bits):
-                        raise StopIteration
-        except StopIteration:
-            pass
-        image.save(destination_image_filename)
+                        break
+                pixels[i, j] = tuple(pixel)
+                if bit_no >= len(bits):
+                    raise StopIteration
+    except StopIteration:
+        pass
+    image.save(destination_image_filename)
 
 
 def show(hided=2):
-    with Image.open(destination_image_filename) as image:
-        bits = ""
-        pixels = image.load()
-        try:
-            for i in xrange(image.size[0]):
-                for j in xrange(image.size[1]):
-                    for color in pixels[i, j]:
-                        bits += extract_mask(color, hided)
-                        if bits[-8:] == "0" * 8:
-                            raise StopIteration
-        except StopIteration:
-            pass
+    image = Image.open(destination_image_filename)
+    bits = ""
+    pixels = image.load()
+    try:
+        for i in xrange(image.size[0]):
+            for j in xrange(image.size[1]):
+                for color in pixels[i, j]:
+                    bits += extract_mask(color, hided)
+                    if bits[-8:] == "0" * 8:
+                        raise StopIteration
+    except StopIteration:
+        pass
 
     bit_no = 0
     data = bytearray()
