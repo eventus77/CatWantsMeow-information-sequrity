@@ -63,7 +63,7 @@ int main(int argc, const char *argv[]) {
 
             decrypt((int*)key, input, output);
             if (auth_code != get_authentication_code(output, (int*)key)) {
-                return AUTHENTICATION_ERROR;
+                printf("Message has changed\n");
             }
         }
         else {
